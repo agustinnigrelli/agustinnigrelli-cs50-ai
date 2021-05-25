@@ -64,4 +64,19 @@ def minimax(board):
     """
     Returns the optimal action for the current player on the board.
     """
-    raise NotImplementedError
+    if terminal(board):
+        return None
+
+    else:
+        allowed_actions = actions(board)
+        minimax_score = []
+
+        if player(board) is X:
+            for action in allowed_actions:
+                minimax_score.append(max_score(result(board, action)))
+                return allowed_actions[minimax_score.index(max(minimax_score))]
+
+        else:
+            for action in allowed_actions:
+                minimax_score.append(min_score(result(board, action)))
+                return allowed_actions[minimax_score.index(min(minimax_score))]
