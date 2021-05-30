@@ -3,6 +3,7 @@ Tic Tac Toe Player
 """
 
 import math
+import copy
 
 X = "X"
 O = "O"
@@ -22,42 +23,67 @@ def player(board):
     """
     Returns player who has the next turn on a board.
     """
-    raise NotImplementedError
+    if terminal(board):
+        return None
 
+    Xcount = 0
+    Ocount = 0
+
+    for i in range(3):
+        for j in range(3):
+            if (board[i][j] == X):
+                Xcount += 1
+            if (board[i][j] == O):
+                Ocount += 1
+
+    if Xcount > Ocount:
+        return O
+    else:
+        return X
 
 def actions(board):
     """
     Returns set of all possible actions (i, j) available on the board.
     """
-    raise NotImplementedError
+    moves = set()
+    for i in range(3):
+        for j in range(3):
+            if (board[i][j] == EMPTY):
+                moves.add((i,j))
+    return moves
 
 
 def result(board, action):
     """
     Returns the board that results from making move (i, j) on the board.
     """
-    action
-    return board
+    if not action:
+        return board
+    if board[action[0]][action[1]] != EMPTY:
+        raise Exception("Forbidden move")
+    
+    result_board = copy.deepcopy(board)
+    result_board[action[0]][action[1]] = player(board)
+    
+    return result_board
 
 
 def winner(board):
     """
     Returns the winner of the game, if there is one.
     """
-    if terminal(board) is True:
-        if utility(board) is 0:
-            return None
-        if utility(board) is 1:
-            return X
-        if utility(board) is -1:
-            return O
-
+    if check_columns(board) == X or check_rows(board) == X or check_diagonals(board) == X:
+        return X
+    if check_columns(board) == O or check_rows(board) == O or check_diagonals(board) == O:
+        return O
+    else:
+        return None
 
 def terminal(board):
     """
     Returns True if game is over, False otherwise.
     """
-    if utility(board) is 0 or 1 or -1:
+    if utility(board) != 0 or len(actions(board)) == 0:
         return True
     else:
         return False
@@ -67,55 +93,50 @@ def utility(board):
     """
     Returns 1 if X has won the game, -1 if O has won, 0 otherwise.
     """
-    if check_columns(board) == X or check_rows(board) == X or check_diagonals(board) == X:
+    if winner(board) == X:
         return 1
-    if check_columns(board) == O or check_rows(board) == O or check_diagonals(board) == O:
+    elif winner(board) == O:
         return -1
     else:
         return 0
+    
 
 def check_columns(board):
     """
     Returns X, O or None depending on the matching symbols found in the columns
     """
-    for j in range (0,2):
+    for j in range(3):
         if board[0][j] == X and board[1][j] == X and board[2][j] == X:
             return X
         if board[0][j] == O and board[1][j] == O and board[2][j] == O:
             return O
-        else:
-            return None
  
 
 def check_rows(board):
     """
     Returns X, O or None depending on the matching symbols found in the rows
     """
-    for i in range (0,2):
+    for i in range(3):
         if board[i][0] == X and board[i][1] == X and board[i][2] == X:
             return X
         if board[i][0] == O and board[i][1] == O and board[i][2] == O:
             return O
-        else:
-            return None
 
-  
 
 def check_diagonals(board):
     """
     Returns X, O or None depending on the matching symbols found in the diagonals
     """
-    for d in range (0,2):
-        if board[d][d] == X and board[d][d] == X and board[d][d] == X:
-            return X
-        if d != 1 and board[d][2-d] == X and board[1][1] == X and board[2-d][d] == X:
-            return X
-        if board[d][d] == O and board[d][d] == O and board[d][d] == O:
-            return O
-        if d != 1 and board[d][2-d] == O and board[1][1] == O and board[2-d][d] == O:
-            return O
+    
+    if board[0][0] == X and board[1][1] == X and board[2][2] == X:
+        return X
+    if board[0][2] == X and board[1][1] == X and board[2][0] == X:
+        return X
+    if board[0][0] == O and board[1][1] == O and board[2][2] == O:
+        return O
+    if board[0][2] == O and board[1][1] == O and board[2][0] == O:
+        return O
 
-    return None
 
 def minimax(board):
     """
@@ -125,41 +146,45 @@ def minimax(board):
         return None
 
     else:
-        allowed_actions = actions(board)
-        minimax_value = []
+        if player(board) == X:
+            return max_value(board)[1]
+        elif player(board) == O:
+            return min_value(board)[1]
 
-        if player(board) is X:
-            for action in allowed_actions:
-                minimax_value.append(max_value(result(board, action)))
-                return allowed_actions[minimax_value.index(max(minimax_value))]
-
-        else:
-            for action in allowed_actions:
-                minimax_value.append(min_value(result(board, action)))
-                return allowed_actions[minimax_value.index(min(minimax_value))]
 
 def max_value(board):
     """
-    Returns the max value obtained from an action
+    Returns the action with max value
     """
-    v = -math.inf
     if terminal(board):
-        return None
+        return utility(board), None
     
-    else: 
-        for action in actions(board):
-            v = max(v, min_value(result(board, action)))
-            return v
+    max_action = None
+    v = -math.inf
+    
+    for action in actions(board):
+        max = min_value(result(board, action))[0]
+        if max > v:
+            v = max
+            max_action = action
+    
+    return v, max_action
+
 
 def min_value(board):
     """
-    Returns the min value obtained from an action
+    Returns the action with min value
     """
-    v = math.inf
     if terminal(board):
-        return None
-
-    else:
-        for action in actions(board):
-            v = min(v, max_value(result(board, action)))
-            return v
+        return utility(board), None
+   
+    min_action = None
+    v = math.inf
+    
+    for action in actions(board):
+        min = max_value(result(board, action))[0]
+        if min < v:
+            v = min
+            min_action = action
+    
+    return v, min_action
