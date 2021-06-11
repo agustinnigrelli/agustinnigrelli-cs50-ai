@@ -101,31 +101,44 @@ class Sentence():
     def __str__(self):
         return f"{self.cells} = {self.count}"
 
+
     def known_mines(self):
         """
         Returns the set of all cells in self.cells known to be mines.
         """
-        raise NotImplementedError
+        if len(self.cells) == self.count:
+            return self.cells.copy()
+        else:
+            return None
+
 
     def known_safes(self):
         """
         Returns the set of all cells in self.cells known to be safe.
         """
-        raise NotImplementedError
+        if len(self.cells) == 0:
+            return self.cells.copy()
+        else:
+            return None
+
 
     def mark_mine(self, cell):
         """
         Updates internal knowledge representation given the fact that
         a cell is known to be a mine.
         """
-        raise NotImplementedError
+        if cell in self.cells:
+            self.cells.remove(cell)
+            self.count -= 1
+
 
     def mark_safe(self, cell):
         """
         Updates internal knowledge representation given the fact that
         a cell is known to be safe.
         """
-        raise NotImplementedError
+        if cell in self.cells:
+            self.cells.remove(cell)
 
 
 class MinesweeperAI():
@@ -149,6 +162,7 @@ class MinesweeperAI():
         # List of sentences about the game known to be true
         self.knowledge = []
 
+
     def mark_mine(self, cell):
         """
         Marks a cell as a mine, and updates all knowledge
@@ -158,6 +172,7 @@ class MinesweeperAI():
         for sentence in self.knowledge:
             sentence.mark_mine(cell)
 
+
     def mark_safe(self, cell):
         """
         Marks a cell as safe, and updates all knowledge
@@ -166,6 +181,7 @@ class MinesweeperAI():
         self.safes.add(cell)
         for sentence in self.knowledge:
             sentence.mark_safe(cell)
+
 
     def add_knowledge(self, cell, count):
         """
@@ -182,7 +198,63 @@ class MinesweeperAI():
             5) add any new sentences to the AI's knowledge base
                if they can be inferred from existing knowledge
         """
-        raise NotImplementedError
+        self.moves_made.add(cell)
+        self.mark_safe(cell)
+
+        neighbors = self.neighborhood(cell)
+        delta = Sentence(neighbors, count)
+        self.knowledge.append(delta)
+        for sentence in self.knowledge:
+            if ((len(sentence.cells) == sentence.count) and len(sentence.cells) != 0):    
+                for nearby_cell in sentence.cells.copy():
+                    self.mark_mine(nearby_cell)
+            if ((sentence.count == 0) and len(sentence.cells) != 0): 
+                for nearby_cell in sentence.cells.copy():
+                    self.mark_safe(nearby_cell)
+        
+        if len(self.knowledge) >= 2:
+            for sentence1, sentence2 in itertools.permutations(self.knowledge[:], 2):
+                if (sentence1.cells.issubset(sentence2.cells)):
+                    new_sentence = Sentence(sentence2.cells - sentence1.cells, sentence2.count - sentence1.count)
+                    if new_sentence not in self.knowledge:
+                        self.knowledge.append(new_sentence)
+
+
+    def neighborhood(self, cell):
+        """
+        Returns all cells surrounding the arg cell
+        """
+        neighbor_cells = []
+        if cell[0]-1 >= 0:
+            neighbor_cells.append((cell[0]-1, cell[1]))
+
+        if cell[1]-1 >= 0:
+            neighbor_cells.append((cell[0], cell[1]-1))
+
+        if cell[0]-1 >= 0 and cell[1]-1 >= 0:
+            neighbor_cells.append((cell[0]-1, cell[1]-1))
+
+        if cell[0]-1 >= 0 and cell[1]+1 <= self.width-1:
+            neighbor_cells.append((cell[0]-1, cell[1]+1))
+
+        if cell[0]+1 <= self.height-1:
+            neighbor_cells.append((cell[0]+1, cell[1]))
+
+        if cell[1]+1 <= self.width-1:
+            neighbor_cells.append((cell[0], cell[1]+1))
+
+        if cell[1]+1 <= self.width-1 and cell[0]+1 <= self.height-1:
+            neighbor_cells.append((cell[0]+1, cell[1]+1))
+
+        if cell[0]+1 <= self.height-1 and cell[1]-1 >= 0:
+            neighbor_cells.append((cell[0]+1, cell[1]-1))
+    
+        for cell in neighbor_cells:
+            if cell in self.moves_made:
+                neighbor_cells.remove(cell)
+        
+        return neighbor_cells
+
 
     def make_safe_move(self):
         """
@@ -193,7 +265,15 @@ class MinesweeperAI():
         This function may use the knowledge in self.mines, self.safes
         and self.moves_made, but should not modify any of those values.
         """
-        raise NotImplementedError
+        safe_cells = []
+        for cell in self.safes:
+                if cell not in self.moves_made:
+                    safe_cells.append(cell)
+        if len(safe_cells) == 0:
+            return None
+        else:
+            return safe_cells[random.randint(0, len(safe_cells)-1)]
+
 
     def make_random_move(self):
         """
@@ -202,4 +282,13 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        raise NotImplementedError
+        available = []
+        for i in range(0, self.height):
+            for j in range(0, self.width):
+                cell = (i, j)
+                if cell not in self.moves_made and cell not in self.mines:
+                    available.append(cell)
+        if len(available) == 0:
+            return None
+        else:
+            return available[random.randint(0, len(available)-1)]
