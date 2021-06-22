@@ -202,23 +202,29 @@ class MinesweeperAI():
         self.mark_safe(cell)
 
         neighbors = self.neighborhood(cell)
-        delta = Sentence(neighbors, count)
-        self.knowledge.append(delta)
+        self.knowledge.append(Sentence(neighbors, count))
+
         for sentence in self.knowledge:
+
             if ((len(sentence.cells) == sentence.count) and len(sentence.cells) != 0):    
                 for nearby_cell in sentence.cells.copy():
                     self.mark_mine(nearby_cell)
             if ((sentence.count == 0) and len(sentence.cells) != 0): 
                 for nearby_cell in sentence.cells.copy():
                     self.mark_safe(nearby_cell)
-        
-        if len(self.knowledge) >= 2:
-            for sentence1, sentence2 in itertools.permutations(self.knowledge[:], 2):
-                if (sentence1.cells.issubset(sentence2.cells)):
-                    new_sentence = Sentence(sentence2.cells - sentence1.cells, sentence2.count - sentence1.count)
-                    if new_sentence not in self.knowledge:
-                        self.knowledge.append(new_sentence)
 
+            if len(self.knowledge) >= 2:
+                for sentence_1, sentence_2 in itertools.permutations(self.knowledge.copy(), r=2):
+                    if (sentence_1.cells < sentence_2.cells):
+                        new_sentence = Sentence(sentence_2.cells - sentence_1.cells, sentence_2.count - sentence_1.count)
+                        if new_sentence not in self.knowledge:
+                            self.knowledge.append(new_sentence)
+            
+            if len(sentence.cells) == 0:
+                self.knowledge.remove(sentence)
+                continue
+                    
+        
 
     def neighborhood(self, cell):
         """
