@@ -63,8 +63,8 @@ def transition_model(corpus, page, damping_factor):
 
     # Initialize dict with random_choice probability for all pages.
     random_choice = (1 - damping_factor) / len(corpus)
-    for i in range(len(corpus)):
-        distribution[f"{i+1}.html"] = random_choice 
+    for page in corpus:
+        distribution[page] = random_choice 
 
     # If current page has links, add probability to leading pages.
     if len(links) != 0:
@@ -84,7 +84,42 @@ def sample_pagerank(corpus, damping_factor, n):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    pass
+    distribution = dict()
+
+    # Initialize each key with 0
+    for page in corpus:
+        distribution[page] = 0
+    
+    # Initialize sampling in random page
+    sample = random.choice(list(distribution.keys()))
+  
+    for _ in range(n):
+        
+        # Count how many times a page is visited (starting with the current one)
+        distribution[sample] +=  1
+        
+        # Call transition model
+        model = transition_model(corpus, sample, damping_factor)
+        pages = list(model.keys())
+        probabilities = list(model.values())
+
+        # Get the next page based on the probabilities of visiting it
+        sample = random.choices(pages, probabilities)[0]
+
+    # Measure the distribution based on how many times the different pages where visited
+    for page in distribution:
+        distribution[page] = distribution[page] / n
+    
+    #SUM
+    total = 0
+    for page in distribution:
+        total += distribution[page]
+
+    print("SAMPLING ==>",total)
+
+    return distribution
+
+
 
 
 def iterate_pagerank(corpus, damping_factor):
@@ -96,7 +131,71 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    pass
+
+    distribution = dict()
+
+    # Initialize each key with 1 / N. Where N is the total pages in corpus
+    for page in corpus:
+        distribution[page] = 1 / len(corpus)
+
+    # Set de desired precision and initial difference
+    precision_value = 0.001
+    precision_achieved = False
+
+    while precision_achieved == False:
+        
+        # Get a copy of the previous distribution
+        previous_distribution = distribution.copy()
+        
+        for page in distribution:
+
+            # Initialize second term of the formula
+            target_prob = 0
+
+            # Get the links of the current page
+            links = []
+            for current, targets in corpus.items():
+                if page in targets or len(targets)==0:          
+                    links.append(current)
+
+            # A page that has no links at all is interpreted as having one link for every page in the corpus (including itself)
+            if len(links) == 0:
+                for page in corpus:
+                    links.append(page)
+
+            # Calculate probability of links
+            for target in links:
+
+                num_links = len(corpus[target])
+                
+                if num_links == 0:
+                    num_links = len(corpus)
+
+                target_prob += previous_distribution[target] / num_links 
+                
+                # Calculate probability for current page using background formula
+                distribution[page] = (1 - damping_factor) / len(corpus) + damping_factor * target_prob
+                
+        # Check if desired precision is achieved
+        check_difference = []
+        for page in distribution:
+            if abs(distribution[page] - previous_distribution[page]) < precision_value:
+                check_difference.append(True)
+            else:
+                check_difference.append(False)
+
+        # If precision is achieved for all pages, set it True
+        if all(check_difference):
+            precision_achieved = True
+
+    #SUM
+    total = 0
+    for page in distribution:
+        total += distribution[page]
+
+    print("ITERATION ==>",total)
+
+    return distribution
 
 
 if __name__ == "__main__":
