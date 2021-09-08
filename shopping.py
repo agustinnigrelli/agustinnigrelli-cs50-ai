@@ -75,20 +75,20 @@ def load_data(filename):
         for row in reader:
             evidence.append([
                 int(row['Administrative']),
-                int(row['OperatingSystems']),
-                int(row['Browser']),
-                int(row['Region']),
-                int(row['TrafficType']),
-                int(row['Informational']),
-                int(row['ProductRelated']),
                 float(row['Administrative_Duration']),
-                float(row['Informational_Duration']),                
+                int(row['Informational']),
+                float(row['Informational_Duration']), 
+                int(row['ProductRelated']),
                 float(row['ProductRelated_Duration']),
                 float(row['BounceRates']),
                 float(row['ExitRates']),
                 float(row['PageValues']),
                 float(row['SpecialDay']),
                 month_index[row['Month']],
+                int(row['OperatingSystems']),
+                int(row['Browser']),
+                int(row['Region']),
+                int(row['TrafficType']),                
                 1 if row['VisitorType'] == 'Returning_Visitor' else 0,
                 1 if row['Weekend'] == 'TRUE' else 0
             ])
