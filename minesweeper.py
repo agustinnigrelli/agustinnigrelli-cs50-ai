@@ -106,10 +106,10 @@ class Sentence():
         """
         Returns the set of all cells in self.cells known to be mines.
         """
-        if len(self.cells) == self.count:
+        if len(self.cells) == self.count and self.count != 0:
             return self.cells.copy()
         else:
-            return None
+            return set()
 
 
     def known_safes(self):
@@ -119,7 +119,7 @@ class Sentence():
         if len(self.cells) == 0:
             return self.cells.copy()
         else:
-            return None
+            return set()
 
 
     def mark_mine(self, cell):
@@ -212,18 +212,19 @@ class MinesweeperAI():
             if ((sentence.count == 0) and len(sentence.cells) != 0): 
                 for nearby_cell in sentence.cells.copy():
                     self.mark_safe(nearby_cell)
-
-            if len(self.knowledge) >= 2:
-                for sentence_1, sentence_2 in itertools.permutations(self.knowledge.copy(), r=2):
-                    if (sentence_1.cells < sentence_2.cells):
-                        new_sentence = Sentence(sentence_2.cells - sentence_1.cells, sentence_2.count - sentence_1.count)
-                        if new_sentence not in self.knowledge:
-                            self.knowledge.append(new_sentence)
+      
+        for sentence_1, sentence_2 in itertools.permutations(self.knowledge.copy(), r=2):
+            if (sentence_1.cells < sentence_2.cells):
+                new_sentence = Sentence(sentence_2.cells - sentence_1.cells, sentence_2.count - sentence_1.count)
+                if new_sentence not in self.knowledge:
+                    self.knowledge.append(new_sentence)
             
+        for sentence in self.knowledge:  
             if len(sentence.cells) == 0:
                 self.knowledge.remove(sentence)
                 continue
-                    
+        
+        return
         
 
     def neighborhood(self, cell):
