@@ -58,15 +58,18 @@ def load_data(data_dir):
     be a list of integer labels, representing the categories for each of the
     corresponding `images`.
     """
-    images = []
-    labels = []
+    images = list()
+    labels = list()
 
-    for root, _, files in os.walk(data_dir):
+    for root, dirs, files in os.walk(data_dir):
+        if root == data_dir:
+            continue
+
         for file in files:
             if not file.startswith('.'):
                 img = cv2.imread(os.path.join(root, file))
-                img = cv2.resize(img, (IMG_WIDTH, IMG_HEIGHT))
-                images.append(img)
+                img_rezised = cv2.resize(img, (IMG_WIDTH, IMG_HEIGHT))
+                images.append(img_rezised)
                 labels.append(int(os.path.basename(root)))
 
     return (images, labels)
