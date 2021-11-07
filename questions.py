@@ -113,18 +113,18 @@ def top_files(query, files, idfs, n):
     to their IDF values), return a list of the filenames of the the `n` top
     files that match the query, ranked according to tf-idf.
     """
-    file_scores = dict()
+    scores = dict()
 
     for file, words in files.items():
         total_tf_idf = 0
         for word in query:
             total_tf_idf += words.count(word) * idfs[word]
-        file_scores[file] = total_tf_idf
+        scores[file] = total_tf_idf
 
-    ranked_files = sorted(file_scores.items(), key=lambda x: x[1], reverse=True)
-    ranked_files = [x[0] for x in ranked_files]
+    ranked = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+    ranked = [x[0] for x in ranked]
 
-    return ranked_files[:n]
+    return ranked[:n]
 
 
 def top_sentences(query, sentences, idfs, n):
